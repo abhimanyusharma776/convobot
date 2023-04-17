@@ -10,7 +10,7 @@ export const makePostRequest = async (path,data) => {
         }).then(
              (response) => {
                  result = response;
-                 console.log(response)
+                //  console.log(response)
              },
              (error) => {
                  console.log(error);
@@ -30,3 +30,27 @@ export const makeGetRequest = async (path) => {
          );
          return result;
      }
+
+export const makePostRequestRasa = async (path, data) => {
+    let result;
+    let body = {
+        "text": data
+    }
+    await axios.post(path, {
+        "text": data
+    }, {
+        params: null,
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }).then(
+        (response) => {
+            result = response;
+            // console.log(response)
+        },
+        (error) => {
+            console.log(error);
+        }
+    );
+    return result;
+}

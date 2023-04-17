@@ -17,7 +17,7 @@ export class Lead {
   country: string;
   description: string;
   leadSource: string;
-  status: string;
+  status : string;
   industry: string;
   rating: string;
   ownerId: string;

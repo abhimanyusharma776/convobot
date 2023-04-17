@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { TimexProperty } from '@microsoft/recognizers-text-data-types-timex-expression';
-import { BookingDetails } from './bookingDetails';
+
 
 import { InputHints, MessageFactory, StatePropertyAccessor, TurnContext } from 'botbuilder';
-import { LuisRecognizer } from 'botbuilder-ai';
+
 
 import {
     ComponentDialog,
@@ -22,6 +21,9 @@ import { FlightBookingRecognizer } from './flightBookingRecognizer';
 import { ListDialog } from './ListDialog';
 import { UpdateDialog } from './UpdateDialog';
 import { CreateDialog } from './CreateDialog.';
+import { makePostRequestRasa } from './Request';
+import { rasaurl } from './url';
+import { IntentObject } from './interface';
 
 const MAIN_WATERFALL_DIALOG = 'mainWaterfallDialog';
 
@@ -45,6 +47,7 @@ export class MainDialog extends ComponentDialog {
             .addDialog(createDialog)
             .addDialog(new WaterfallDialog(MAIN_WATERFALL_DIALOG, [
                 this.introStep.bind(this),
+                this.intermedialte.bind(this),
                 this.actStep.bind(this),
                 this.finalStep.bind(this)
             ]));
@@ -80,26 +83,41 @@ export class MainDialog extends ComponentDialog {
         //     return await stepContext.next();
         // }
 
-        const messageText = (stepContext.options as any).restartMsg ? (stepContext.options as any).restartMsg : 'What can I help you with today?'+'\n'+'Here are some suggestions which will help\n1.List\n2.Create\n3.Update';
+        const messageText = (stepContext.options as any).restartMsg ? (stepContext.options as any).restartMsg : 'What can I help you with today?'+'\n'+'Here are some suggestions which will help\n1.List all <Entity>\n2.Create <entity> with <attributes>\n3.Update';
         const promptMessage = MessageFactory.text(messageText, messageText, InputHints.ExpectingInput);
         return await stepContext.prompt('TextPrompt', { prompt: promptMessage });
     }
+
+    private async intermedialte (stepContext: WaterfallStepContext<IntentObject>): Promise<DialogTurnResult> {
+        let intentObject = await makePostRequestRasa(rasaurl, stepContext.result);
+        console.log(intentObject);
+        if(intentObject.data.intent.name === 'fallback'){
+            const didntUnderstandMessageText = `Sorry, your intent was unclear, Here are some suggestions which will help\n1.List\n2.Create\n3.Update`;
+            const promptMessage = MessageFactory.text(didntUnderstandMessageText, didntUnderstandMessageText, InputHints.ExpectingInput);
+            return await stepContext.prompt('TextPrompt', { prompt: promptMessage });
+        }
+        return await stepContext.next(intentObject);
+       
+    }
+    
 
     /**
      * Second step in the waterall.  This will use LUIS to attempt to extract the origin, destination and travel dates.
      * Then, it hands off to the bookingDialog child dialog to collect any remaining details.
      */
-    private async actStep(stepContext: WaterfallStepContext): Promise<DialogTurnResult> {
-        const bookingDetails = new BookingDetails();
+    private async actStep(stepContext: WaterfallStepContext<IntentObject>): Promise<DialogTurnResult> {
+        const myobj:IntentObject = stepContext.result.data;
+        let intent;
 
-        // if (!this.luisRecognizer.isConfigured) {
-        //     // LUIS is not configured, we just run the BookingDialog path.
-        //     return await stepContext.beginDialog('bookingDialog', bookingDetails);
-        // }
-        // Call LUIS and gather any potential booking details. (Note the TurnContext has the response to the prompt)
-        // const luisResult = await this.luisRecognizer.executeLuisQuery(stepContext.context);
-        switch (stepContext.result) {
-        case 'List':
+
+        if(stepContext.result.data.intent.name === 'fallback')
+        {
+            intent = stepContext.result;
+        } else {intent = stepContext.result.data.intent.name;
+                intent = intent.split('_');}
+        console.log(intent);
+        switch (intent[0]) {
+        case 'get':
             // Extract the values for the composite entities from the LUIS result.
             // const fromEntities = this.luisRecognizer.getFromEntities(luisResult);
             // const toEntities = this.luisRecognizer.getToEntities(luisResult);
@@ -114,17 +132,18 @@ export class MainDialog extends ComponentDialog {
             // console.log('LUIS extracted these booking details:', JSON.stringify(bookingDetails));
 
             // Run the BookingDialog passing in whatever details we have from the LUIS call, it will fill out the remainder.
-            return await stepContext.beginDialog('listDialog');
+            return await stepContext.beginDialog('listDialog',myobj);
             break;
 
-        case 'Update':
+        case 'update':
             // We haven't implemented the GetWeatherDialog so we just display a TODO message.
             // const getWeatherMessageText = 'TODO: get weather flow here';
             // await stepContext.context.sendActivity(getWeatherMessageText, getWeatherMessageText, InputHints.IgnoringInput);
             return await stepContext.beginDialog('updateDialog');
             break;
-        case 'Create':
-            return await stepContext.beginDialog('createDialog');
+        case 'create':
+            console.log("started with create");
+            return await stepContext.beginDialog('createDialog',myobj);
             break;
         default:
             // Catch all for unhandled intents
