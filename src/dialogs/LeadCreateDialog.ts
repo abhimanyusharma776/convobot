@@ -51,20 +51,21 @@ export class LeadCreateDialog extends CancelAndHelpDialog {
         const msg = MessageFactory.text(messageText, messageText, InputHints.ExpectingInput);
         return await stepContext.prompt(TEXT_PROMPT, { prompt: msg }); 
     }
-    return await stepContext.next();
+    return await stepContext.next(lead.lastName);
 
     }
 
     private async company (stepContext: WaterfallStepContext<IntentObject>): Promise<DialogTurnResult> {
-        console.log("intentObject",stepContext.options.entities[0],stepContext.options.entities[1],stepContext.options.entities[2],stepContext.options.entities[3])
-        if(stepContext.options.entities.some(obj => obj.entity === "companyname")){
+        // console.log("intentObject",stepContext.options.entities[0],stepContext.options.entities[1],stepContext.options.entities[2],stepContext.options.entities[3]);
+        if(!(stepContext.options.entities.some(obj => obj.entity === "companyname"))){
         lead.lastName = stepContext.result;
         const messageText = 'what is the company name of the lead ';
         const msg = MessageFactory.text(messageText, messageText, InputHints.ExpectingInput);
         return await stepContext.prompt(TEXT_PROMPT, { prompt: msg });
     }
+    
         lead.company = stepContext.options.entities.find(o => o.entity === 'companyname').value;
-        return await stepContext.next();
+        return await stepContext.next(lead.company);
     }
 
     private async finalStep (stepContext: WaterfallStepContext<IntentObject>) {
