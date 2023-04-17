@@ -51,6 +51,8 @@ export class AccountCreateDialog extends CancelAndHelpDialog {
             return await stepContext.prompt(TEXT_PROMPT, { prompt: msg });
     
         }
+
+        account.shippingCity=stepContext.options.entities.find(o => o.entity === 'shippingcity').value;
         return await stepContext.next(account.shippingCity);
 
             }
