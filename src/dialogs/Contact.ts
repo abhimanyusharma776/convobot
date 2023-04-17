@@ -1,0 +1,29 @@
+export class Contact {
+  id: string;
+  salutation: string;
+  firstName: string;
+  lastName: string;
+  accountId: string;
+  title: string;
+  department: string;
+  phone: string;
+  mobilePhone: string;
+  fax: string;
+  email: string;
+  assistantName: string;
+  assistantPhone: string;
+  mailingStreet: string;
+  mailingCity: string;
+  mailingState: string;
+  mailingPostalCode: string;
+  mailingCountry: string;
+  otherStreet: string;
+  otherCity: string;
+  otherState: string;
+  otherPostalCode: string;
+  otherCountry: string;
+  description: string;
+  ownerId: string;
+  createdDate: string;
+  lastModifiedDate: string;
+}
