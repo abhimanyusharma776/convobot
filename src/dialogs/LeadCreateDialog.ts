@@ -31,7 +31,7 @@ export class LeadCreateDialog extends CancelAndHelpDialog {
     }
 
     private async firstName (stepContext: WaterfallStepContext<IntentObject>): Promise<DialogTurnResult> {
-        if (!stepContext.options.entities.some(obj => obj.entity === "fullname")){
+        if (!(stepContext.options.entities.some(obj => obj.entity === "fullname"))){
         const messageText = 'what is the first name of the lead ';
         const msg = MessageFactory.text(messageText, messageText, InputHints.ExpectingInput);
         return await stepContext.prompt(TEXT_PROMPT, { prompt: msg });
